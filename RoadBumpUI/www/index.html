@@ -1,0 +1,198 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+    <link rel="stylesheet" type="text/css" href="css/index.css" />
+
+    <title>RoadBumpUI</title>
+</head>
+<body>
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="jquery-1.10.1.min.js"></script>
+
+    <script type="text/javascript">
+        document.addEventListener("deviceready", loaded, false);
+
+        var object = {
+            Long: "",
+            Lat: "",
+            X: "",
+            Y: "",
+            Z: "",
+            MAg: "",
+            Timestamp: "",
+            Rate: "",
+            getrating: function () {
+                if (X > 12) {
+                    this.Reprot = true;
+                    if (X < 19) {
+                        this.Rate = "L";
+                        return this.Rate;
+                    }
+                    else if (X < 30) {
+                        this.Rate = "M";
+                        return this.Rate;
+                    }
+                    else if (X < 30) {
+                        this.Rate = "H";
+                        return this.Rate;
+                    }
+                }
+                else {
+                    this.Rate = "U";
+                    return this.Rate
+                }
+            }
+        };
+
+        function loaded() {
+            navigator.geolocation.watchPosition(success, error);
+            startWatch();
+        }
+
+        var temp = {
+            Long: "",
+            Lat: "",
+            Timestamp: ""
+        };
+
+        function success(position) {
+            alert("success");
+            var element = document.getElementById('geolocation');
+            element.innerHTML = 'Latitude: ' + position.coords.latitude + '<br />' +
+            'Longitude: ' + position.coords.longitude + '<br />' +
+            'Timestamp: ' + new Date(position.timestamp) + '<br />';
+
+            temp.Lat = position.coords.latitude;
+            temp.Long = position.coords.longitude;
+            temp.Timestamp = position.timestamp;
+
+        }
+
+        function error(error) {
+            alert(error.message);
+        }
+
+        var watchID = null;
+
+        function startWatch() {
+
+            var previousReading = {
+                x: null,
+                y: null,
+                z: null
+            }
+
+            navigator.accelerometer.watchAcceleration(function (acceleration) {
+                var changes = {},
+                bound = 1;
+                if (previousReading.x !== null) {
+                    changes.x = Math.abs(previousReading.x - acceleration.x);
+                    changes.y = Math.abs(previousReading.y - acceleration.y);
+                    changes.z = Math.abs(previousReading.z - acceleration.z);
+                }
+
+                if (changes.x > bound && changes.y > bound && changes.z > bound) {
+                    shaken();
+                }
+
+                previousReading = {
+                    x: acceleration.x,
+                    y: acceleration.y,
+                    z: acceleration.z
+                }
+
+            }, onError, { frequency: 3000 });
+        }
+
+        function shaken() {
+            alert("Shaken");
+            object.lat = temp.lat;
+            object.Long = temp.Long;
+            object.Timestamp = temp.Timestam;
+            object.rate = object.getrating();
+            alert(object.rate);
+            postBump();
+        }
+
+        // Error
+        function onError() {
+            alert('onError!');
+        }
+
+        function postBump() {
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: "http://localhost:6729/api/Bump",
+                data: object,
+                success: function (data) {
+                    alert('Post succeeded');
+                },
+                error: function (error) {
+                    alert('Post failed!');
+                }
+            });
+        }
+
+        function getBumps() {
+            $.ajax({
+                type: "GET",
+                dataType: 'json',
+                url: 'http://localhost:6729/api/Bump',
+                success: function (data) {
+                    if (data) {
+                        var len = data.length;
+                        var txt = "";
+                        if (len > 0) {
+                            for (var i = 0; i < len; i++) {
+                                if (data[i].Timestamp && data[i].Long && data[i].Lat && data[i].X && data[i].Y && data[i].Z && data[i].Magnitude && data[i].Rating) {
+                                    txt +=
+                                        "<tr>" +
+                                        "<td>" + data[i].Id + "</td>" +
+                                        "<td>" + data[i].Timestamp + "</td>" +
+                                        "<td>" + data[i].Long + "</td>" +
+                                        "<td>" + data[i].Lat + "</td>" +
+                                        "<td>" + data[i].X + "</td>" +
+                                        "<td>" + data[i].Y + "</td>" +
+                                        "<td>" + data[i].Z + "</td>" +
+                                        "<td>" + data[i].Magnitude + "</td>" +
+                                        "<td>" + data[i].Rating + "</td>" +
+                                        "</tr>";
+                                }
+                            }
+                            if (txt != "") {
+                                $("#table").append(txt).removeClass("hidden");
+                            }
+                        }
+                    }
+                },
+                error: function (error) {
+                    alert('Post failed!');
+                }
+            });
+        }
+
+    </script>
+    <fieldset>
+        <legend>Contacts:</legend>
+        <table id="table" class="hidden">
+            <tr>
+                <th>ID</th>
+                <th>Timestamp</th>
+                <th>Longitude</th>
+                <th>Latitude</th>
+                <th>X</th>
+                <th>Y</th>
+                <th>Z</th>
+                <th>Magnitude</th>
+                <th>Rating</th>
+            </tr>
+        </table>
+    </fieldset>
+    <input type="button" value="Post" onclick="postBump()">
+    <input type="button" value="Get" onclick="getBumps()">
+</body>
+</html>
