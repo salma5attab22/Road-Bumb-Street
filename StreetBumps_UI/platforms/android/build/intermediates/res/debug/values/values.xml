@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- From: file:/D:/iTi/GP/RoadBumps/StreetBumps_UI/StreetBumps_UI/platforms/android/res/values/strings.xml -->
+    <eat-comment/>
+    <string name="activity_name">@string/launcher_name</string>
+    <string name="app_name">StreetBumps_UI</string>
+    <string name="launcher_name">@string/app_name</string>
+</resources>

@@ -1,0 +1,2 @@
+D:\iTi\GP\RoadBumps\StreetBumps_UI\StreetBumps_UI\platforms\android\build\intermediates\classes\debug
+D:\iTi\GP\RoadBumps\StreetBumps_UI\StreetBumps_UI\platforms\android\build\intermediates\pre-dexed\debug\classes-f82551a2a29f5c36b243814ab45fed6a9d1e069b.jar
